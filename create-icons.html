@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Icon Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 10px;
+        }
+        .info {
+            background: #f0f0f0;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>PWA Icon Generator</h1>
+    <div class="info">
+        <p>This page generates app icons automatically. Right-click each icon below and "Save image as..." to the <strong>icons/</strong> folder.</p>
+    </div>
+    
+    <div id="icons-container"></div>
+
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        const container = document.getElementById('icons-container');
+
+        sizes.forEach(size => {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#4A90E2');
+            gradient.addColorStop(1, '#357ABD');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+
+            // Draw sparkles emoji
+            ctx.font = `${size * 0.5}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('✨', size / 2, size / 2);
+
+            // Label
+            const label = document.createElement('p');
+            label.textContent = `icon-${size}x${size}.png`;
+            label.style.margin = '0';
+            
+            const wrapper = document.createElement('div');
+            wrapper.style.display = 'inline-block';
+            wrapper.style.margin = '10px';
+            wrapper.appendChild(canvas);
+            wrapper.appendChild(label);
+            
+            container.appendChild(wrapper);
+
+            // Auto download (optional - comment out if you prefer manual save)
+            // canvas.toBlob(blob => {
+            //     const url = URL.createObjectURL(blob);
+            //     const a = document.createElement('a');
+            //     a.href = url;
+            //     a.download = `icon-${size}x${size}.png`;
+            //     a.click();
+            // });
+        });
+    </script>
+</body>
+</html>
+
