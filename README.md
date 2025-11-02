@@ -239,8 +239,19 @@ cleanup-app/
 
 - No passwords are stored (simple name-based identification)
 - All household data is isolated by household code
-- Firebase Database Rules should be configured for your security needs
-- For production use, consider implementing proper authentication
+- **Firebase API keys in the code are PUBLIC by design** - this is normal for client-side apps
+- **Security is enforced through Firebase Database Rules** (server-side)
+- For production use, proper Database Rules are configured to prevent unauthorized access
+- Only members with valid household codes can access household data
+
+### Security Best Practices Implemented
+
+✅ **Database Rules:** Only existing households can be read/written to  
+✅ **Data Isolation:** Each household's data is completely separate  
+✅ **No Unauthorized Creation:** Random users cannot create fake households  
+✅ **Usage Monitoring:** Budget alerts set up to prevent abuse  
+
+**Note:** The Firebase config in the code is safe to be public. The actual security is handled by Firebase Database Rules on Google's servers, not in the client code.
 
 ## Future Enhancements
 

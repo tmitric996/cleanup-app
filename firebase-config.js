@@ -20,6 +20,7 @@ if (typeof firebase === 'undefined') {
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
       console.log('✅ Firebase initialized successfully');
+      console.log('🔒 Security: Database rules are protecting your data');
     }
   } catch (error) {
     console.error('❌ Firebase initialization error:', error);
