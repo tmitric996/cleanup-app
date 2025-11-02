@@ -1,9 +1,10 @@
-const CACHE_NAME = 'cleanup-tasks-v1';
+const CACHE_NAME = 'cleanup-tasks-v2';
 const urlsToCache = [
   './',
   './index.html',
   './styles.css',
   './script.js',
+  './firebase-config.js',
   './manifest.json'
 ];
 

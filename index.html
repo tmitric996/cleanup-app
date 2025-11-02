@@ -26,14 +26,55 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Firebase - Load at the beginning of body -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <!-- Login/Onboarding Screen -->
+    <div id="onboarding-screen" class="onboarding-screen">
+        <div class="onboarding-content">
+            <h1 class="onboarding-title">🏠 Cleanup Tasks</h1>
+            <p class="onboarding-subtitle">Manage household tasks together</p>
+            
+            <!-- Step 1: Join or Create Household -->
+            <div id="household-step" class="onboarding-step">
+                <h2>Join or Create Household</h2>
+                <input type="text" id="household-code-input" class="onboarding-input" placeholder="Enter household code (or leave empty to create new)">
+                <button id="household-continue" class="btn-primary">Continue</button>
+            </div>
+
+            <!-- Step 2: Enter Your Name -->
+            <div id="name-step" class="onboarding-step" style="display: none;">
+                <h2>What's your name?</h2>
+                <input type="text" id="user-name-input" class="onboarding-input" placeholder="Enter your name">
+                <button id="name-continue" class="btn-primary">Start Cleaning! 🧹</button>
+                <button id="name-back" class="btn-secondary">Back</button>
+            </div>
+
+            <!-- Household Code Display -->
+            <div id="household-code-display" style="display: none; margin-top: 1rem; padding: 1rem; background: var(--card-bg); border-radius: 8px;">
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;">Share this code with family:</p>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <code id="household-code-text" style="flex: 1; padding: 0.75rem; background: var(--bg-color); border-radius: 6px; font-size: 1.2rem; font-weight: 700; text-align: center;">XXXXX</code>
+                    <button id="copy-code" class="btn-icon" title="Copy code" style="width: 40px; height: 40px;">📋</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Main App Container -->
-    <div class="app-container">
+    <div class="app-container" id="main-app" style="display: none;">
         <!-- Header -->
         <header class="app-header">
             <h1 class="header-title">Cleanup Tasks</h1>
-            <button id="theme-toggle" class="theme-toggle" title="Toggle dark mode">
-                <span class="theme-icon">🌙</span>
-            </button>
+            <div class="header-actions">
+                <button id="theme-toggle" class="theme-toggle" title="Toggle dark mode">
+                    <span class="theme-icon">🌙</span>
+                </button>
+                <button id="settings-btn" class="theme-toggle" title="Settings">
+                    <span class="theme-icon">⚙️</span>
+                </button>
+            </div>
         </header>
 
         <!-- Main Content Area -->
@@ -70,9 +111,8 @@
                 </div>
 
                 <!-- Tasks Display Area -->
-                <div class="tasks-display" id="tasks-display">
-                    <h3 id="tasks-header">Today's Tasks</h3>
-                    <div id="tasks-list" class="tasks-list">
+                <div class="tasks-display">
+                    <div id="tasks-for-display" class="tasks-list">
                         <!-- Tasks will appear here -->
                     </div>
                 </div>
@@ -104,6 +144,14 @@
                         <div class="form-group">
                             <label for="task-time">Estimated Time (minutes)</label>
                             <input type="number" id="task-time" name="estimatedTime" min="1" placeholder="15" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="task-assigned">Assign To (optional)</label>
+                            <select id="task-assigned" name="assignedTo">
+                                <option value="">Anyone can do it</option>
+                                <!-- Family members will be populated here -->
+                            </select>
                         </div>
 
                         <button type="submit" class="btn-primary">Create Task</button>
@@ -142,16 +190,46 @@
         </nav>
     </div>
 
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content history-modal-content">
+            <div class="history-header">
+                <h3>Settings</h3>
+                <button id="close-settings" class="close-btn">×</button>
+            </div>
+            <div class="settings-content">
+                <div class="settings-section">
+                    <h4>Household</h4>
+                    <p><strong>Code:</strong> <span id="settings-household-code"></span></p>
+                    <button id="copy-household-code" class="btn-secondary">Copy Code</button>
+                </div>
+                <div class="settings-section">
+                    <h4>Family Members</h4>
+                    <div id="family-members-list"></div>
+                    <div style="margin-top: 1rem;">
+                        <input type="text" id="new-member-name" class="onboarding-input" placeholder="Add family member">
+                        <button id="add-member-btn" class="btn-primary" style="margin-top: 0.5rem;">Add Member</button>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h4>Your Profile</h4>
+                    <p><strong>Name:</strong> <span id="settings-user-name"></span></p>
+                    <button id="logout-btn" class="btn-secondary">Switch Household</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Timer Modal -->
     <div id="timer-modal" class="modal">
         <div class="modal-content timer-modal-content">
             <h3 id="timer-task-name">Task Name</h3>
             <div class="timer-display" id="timer-display">15:00</div>
             <div class="timer-progress">
-                <div class="timer-progress-bar" id="timer-progress-bar"></div>
+                <div class="timer-progress-bar" id="timer-progress-fill"></div>
             </div>
             <div class="modal-actions">
-                <button id="complete-timer-task" class="btn-primary">✓ Complete</button>
+                <button id="complete-task" class="btn-primary">✓ Complete</button>
                 <button id="cancel-timer" class="btn-secondary">Cancel</button>
             </div>
         </div>
@@ -167,11 +245,11 @@
             <div class="history-stats">
                 <div class="stat-item">
                     <span class="stat-label">Total Completions</span>
-                    <span class="stat-value" id="total-completions">0</span>
+                    <span class="stat-value" id="history-total-completions">0</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-label">Last Completed</span>
-                    <span class="stat-value" id="last-completed">Never</span>
+                    <span class="stat-label">Current Streak</span>
+                    <span class="stat-value" id="history-current-streak">0</span>
                 </div>
             </div>
             <div class="history-list-container">
