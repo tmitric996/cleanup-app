@@ -156,7 +156,30 @@ class TaskManager {
 
     async addMemberToHousehold(userId, userName, isNew) {
         try {
-            const memberRef = this.database.ref(`households/${this.householdId}/members/${userId}`);
+            // Check if a member with this name already exists
+            const membersSnapshot = await this.database.ref(`households/${this.householdId}/members`).once('value');
+            const existingMembers = membersSnapshot.val() || {};
+            
+            let existingMemberId = null;
+            for (const [memberId, memberData] of Object.entries(existingMembers)) {
+                if (memberData.name === userName) {
+                    existingMemberId = memberId;
+                    console.log('👤 Found existing member with name:', userName, '- Using existing ID:', memberId);
+                    break;
+                }
+            }
+            
+            // If member exists, use their ID; otherwise use the new userId
+            const finalUserId = existingMemberId || userId;
+            
+            // Update localStorage with the correct userId
+            if (existingMemberId) {
+                localStorage.setItem('userId', existingMemberId);
+                this.userId = existingMemberId;
+            }
+            
+            // Set/update member data
+            const memberRef = this.database.ref(`households/${this.householdId}/members/${finalUserId}`);
             await memberRef.set({
                 name: userName,
                 joinedAt: new Date().toISOString()
@@ -167,7 +190,7 @@ class TaskManager {
                 await this.database.ref(`households/${this.householdId}/createdAt`).set(new Date().toISOString());
             }
             
-            console.log('✅ Member added to household:', userName);
+            console.log('✅ Member added/updated in household:', userName, 'ID:', finalUserId);
         } catch (error) {
             console.error('❌ Error adding member to Firebase:', error);
             alert('Error creating/joining household: ' + error.message + '\n\nPlease check:\n1. Firebase is initialized\n2. Database rules are set correctly\n3. Internet connection is working');
